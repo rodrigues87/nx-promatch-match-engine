@@ -7,6 +7,7 @@ import { mockMatches } from "@/mocks/matches"
 import { mockUser } from "@/mocks/users"
 import { MatchCard } from "@/components/MatchCard"
 import { SkillTag } from "@/components/SkillTag"
+import Link from "next/link"
 
 export default function DashboardPage() {
   const user = mockUser
@@ -18,29 +19,16 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">JobMatch</h1>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600">{user.name}</span>
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-              {user.name.charAt(0)}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Skills do usuário */}
         <section className="mb-8">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
               Suas skills
             </h2>
-            <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+            <Link href="/profile" className="text-sm text-blue-600 hover:text-blue-800 font-medium">
               Editar
-            </button>
+            </Link>
           </div>
           <div className="flex flex-wrap gap-2">
             {user.skills.map((skill) => (
@@ -80,7 +68,7 @@ export default function DashboardPage() {
             ))}
           </div>
         </section>
-      </main>
+      </div>
     </div>
   )
 }
