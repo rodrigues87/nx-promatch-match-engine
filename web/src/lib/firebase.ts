@@ -27,9 +27,11 @@ export function isFirebaseConfigured(): boolean {
 }
 
 /**
- * Modo mock ativo quando Firebase não está configurado.
+ * Modo mock sempre ativo por enquanto.
+ * Quando for conectar ao Firebase real, altere para:
+ * export const MOCK_MODE = !isFirebaseConfigured()
  */
-export const MOCK_MODE = !isFirebaseConfigured()
+export const MOCK_MODE = true
 
 // Inicializa Firebase apenas se configurado
 let app: FirebaseApp | null = null
