@@ -50,7 +50,8 @@ export function useApplications(): UseApplicationsReturn {
     }
 
     if (!user || !db) {
-      setApplications([])
+      // Não logado: usa mock para preview
+      setApplications(mockApplications)
       setLoading(false)
       return
     }

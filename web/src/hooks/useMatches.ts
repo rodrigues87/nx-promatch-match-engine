@@ -37,7 +37,8 @@ export function useMatches(maxResults: number = 50): UseMatchesReturn {
     }
 
     if (!user || !db) {
-      setMatches([])
+      // Não logado: usa mock para preview
+      setMatches(mockMatches)
       setLoading(false)
       return
     }

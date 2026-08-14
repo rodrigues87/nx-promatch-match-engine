@@ -39,7 +39,8 @@ export function useProfile(): UseProfileReturn {
     }
 
     if (!user || !db) {
-      setProfile(null)
+      // Não logado: usa mock para preview (não bloqueia UX)
+      setProfile(mockUser)
       setLoading(false)
       return
     }
