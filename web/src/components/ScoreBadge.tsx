@@ -1,7 +1,3 @@
-/**
- * Badge de score — cor muda conforme nível de compatibilidade.
- */
-
 interface ScoreBadgeProps {
   score: number
 }
@@ -11,17 +7,15 @@ export function ScoreBadge({ score }: ScoreBadgeProps) {
 
   let colorClass: string
   if (percent >= 80) {
-    colorClass = "bg-green-100 text-green-800 border-green-300"
+    colorClass = "text-green-400 bg-green-400/10 border-green-400/20"
   } else if (percent >= 60) {
-    colorClass = "bg-yellow-100 text-yellow-800 border-yellow-300"
+    colorClass = "text-accent bg-accent-glow border-accent/20"
   } else {
-    colorClass = "bg-red-100 text-red-700 border-red-300"
+    colorClass = "text-surface-800 bg-surface-200 border-dark-border"
   }
 
   return (
-    <span
-      className={`inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-full border ${colorClass}`}
-    >
+    <span className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-full border ${colorClass}`}>
       {percent}%
     </span>
   )

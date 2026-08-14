@@ -4,9 +4,9 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 const navItems = [
-  { href: "/dashboard", label: "Vagas", icon: "🎯" },
-  { href: "/applications", label: "Candidaturas", icon: "📋" },
-  { href: "/profile", label: "Perfil", icon: "👤" },
+  { href: "/dashboard", label: "Vagas" },
+  { href: "/applications", label: "Candidaturas" },
+  { href: "/profile", label: "Perfil" },
 ]
 
 export function NavBar() {
@@ -18,12 +18,14 @@ export function NavBar() {
   }
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-4xl mx-auto px-6">
+    <nav className="sticky top-0 z-50 border-b border-dark-border bg-dark-bg/90 backdrop-blur-md">
+      <div className="max-w-6xl mx-auto px-6">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <span className="text-xl font-bold text-blue-600">ProMatch</span>
+          <Link href="/dashboard" className="flex items-center">
+            <span className="text-xl font-bold text-white">
+              ProMatch<span className="text-accent">.</span>
+            </span>
           </Link>
 
           {/* Nav links */}
@@ -34,14 +36,13 @@ export function NavBar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      ? "text-accent bg-accent-glow"
+                      : "text-surface-800 hover:text-white hover:bg-surface-200"
                   }`}
                 >
-                  <span>{item.icon}</span>
-                  <span>{item.label}</span>
+                  {item.label}
                 </Link>
               )
             })}

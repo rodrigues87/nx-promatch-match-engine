@@ -13,10 +13,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR">
-      <body className="antialiased bg-gray-50 min-h-screen">
+    <html lang="pt-BR" className="dark">
+      <body className="antialiased min-h-screen">
         <NavBar />
-        <main>{children}</main>
+        <main className="min-h-[calc(100vh-56px)]">{children}</main>
       </body>
     </html>
   )

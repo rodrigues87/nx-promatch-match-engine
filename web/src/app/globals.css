@@ -2,7 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  
+  body {
+    @apply bg-dark-bg text-white font-sans antialiased;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-dark-bg;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-500 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-surface-600;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-dark-card/80 backdrop-blur-sm border border-dark-border rounded-2xl;
+  }
+
+  .glass-card-hover {
+    @apply glass-card hover:border-surface-500 hover:shadow-card-hover transition-all duration-300;
+  }
+
+  .accent-gradient {
+    @apply bg-gradient-to-r from-accent to-accent-light;
+  }
+
+  .text-muted {
+    @apply text-surface-800;
+  }
+
+  .input-dark {
+    @apply w-full px-4 py-3 bg-surface-100 border border-dark-border rounded-xl text-white 
+           placeholder:text-surface-700 focus:ring-2 focus:ring-accent/40 focus:border-accent/50 
+           outline-none transition-all duration-200;
+  }
+
+  .btn-primary {
+    @apply px-6 py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-xl 
+           transition-all duration-200 hover:shadow-glow active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 border border-dark-border text-surface-900 hover:text-white 
+           hover:border-surface-500 rounded-xl transition-all duration-200;
+  }
 }

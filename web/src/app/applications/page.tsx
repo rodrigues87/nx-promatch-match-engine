@@ -9,7 +9,7 @@ export default function ApplicationsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
       </div>
     )
   }
@@ -20,29 +20,31 @@ export default function ApplicationsPage() {
   const failed = applications.filter((a) => a.status === "failed")
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-gray-900">Minhas Candidaturas</h1>
-          <p className="text-sm text-gray-500 mt-1">
+    <div className="min-h-[calc(100vh-56px)]">
+      <div className="max-w-6xl mx-auto px-6 py-10">
+        {/* Header */}
+        <div className="mb-10">
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Candidaturas<span className="text-accent">.</span>
+          </h1>
+          <p className="text-surface-800">
             {completed.length} enviadas · {pending.length + processing.length} em andamento · {failed.length} com falha
           </p>
         </div>
 
         {applications.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-            <p className="text-gray-500">Nenhuma candidatura ainda.</p>
-            <p className="text-sm text-gray-400 mt-1">
-              Encontre vagas compatíveis no Dashboard e clique em Candidatar.
+          <div className="glass-card p-12 text-center">
+            <p className="text-surface-800 text-lg">Nenhuma candidatura ainda.</p>
+            <p className="text-surface-700 text-sm mt-2">
+              Encontre vagas compatíveis e clique em Candidatar.
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {/* Processando */}
+          <div className="space-y-8">
             {processing.length > 0 && (
               <section>
-                <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
-                  Processando agora
+                <h2 className="text-sm font-medium text-surface-700 uppercase tracking-wider mb-4">
+                  Processando
                 </h2>
                 <div className="space-y-3">
                   {processing.map((app) => (
@@ -52,10 +54,9 @@ export default function ApplicationsPage() {
               </section>
             )}
 
-            {/* Na fila */}
             {pending.length > 0 && (
               <section>
-                <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+                <h2 className="text-sm font-medium text-surface-700 uppercase tracking-wider mb-4">
                   Na fila
                 </h2>
                 <div className="space-y-3">
@@ -66,11 +67,10 @@ export default function ApplicationsPage() {
               </section>
             )}
 
-            {/* Enviadas */}
             {completed.length > 0 && (
               <section>
-                <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
-                  Enviadas com sucesso
+                <h2 className="text-sm font-medium text-surface-700 uppercase tracking-wider mb-4">
+                  Enviadas
                 </h2>
                 <div className="space-y-3">
                   {completed.map((app) => (
@@ -80,10 +80,9 @@ export default function ApplicationsPage() {
               </section>
             )}
 
-            {/* Falhas */}
             {failed.length > 0 && (
               <section>
-                <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+                <h2 className="text-sm font-medium text-surface-700 uppercase tracking-wider mb-4">
                   Com falha
                 </h2>
                 <div className="space-y-3">
