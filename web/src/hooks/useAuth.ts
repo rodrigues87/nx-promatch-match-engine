@@ -1,16 +1,8 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import {
-  User,
-  onAuthStateChanged,
-  signInWithPopup,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  GoogleAuthProvider,
-} from "firebase/auth"
-import { auth, MOCK_MODE } from "@/lib/firebase"
+import { User } from "firebase/auth"
+import { MOCK_MODE } from "@/lib/firebase"
 import { mockUser } from "@/mocks/users"
 
 export interface AuthState {
@@ -27,55 +19,47 @@ export interface AuthActions {
   signOut: () => Promise<void>
 }
 
-/**
- * Hook de autenticação — usa Firebase Auth se configurado, mock caso contrário.
- */
 export function useAuth(): AuthState & AuthActions {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(!MOCK_MODE)
+  const [user, setUser] = useState<User | null>(
+    MOCK_MODE
+      ? ({ uid: mockUser.id, email: mockUser.email, displayName: mockUser.name } as unknown as User)
+      : null
+  )
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (MOCK_MODE) {
-      // Mock: simula usuário autenticado
-      setUser({
-        uid: mockUser.id,
-        email: mockUser.email,
-        displayName: mockUser.name,
-      } as unknown as User)
-      setLoading(false)
-      return
-    }
+    if (MOCK_MODE) return
 
-    if (!auth) {
-      // Firebase não inicializado
-      setLoading(false)
-      return
-    }
-
-    // Timeout de segurança: se onAuthStateChanged não responder em 3s,
-    // assume sem user e para de carregar
-    const timeout = setTimeout(() => {
-      setLoading(false)
-    }, 3000)
-
-    // Firebase: escuta mudanças no estado de autenticação
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      clearTimeout(timeout)
-      setUser(firebaseUser)
-      setLoading(false)
+    // Firebase real
+    setLoading(true)
+    import("firebase/auth").then(({ onAuthStateChanged }) => {
+      import("@/lib/firebase").then(({ auth }) => {
+        if (!auth) {
+          setLoading(false)
+          return
+        }
+        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+          setUser(firebaseUser)
+          setLoading(false)
+        })
+        // Timeout de segurança
+        const timeout = setTimeout(() => setLoading(false), 3000)
+        return () => {
+          clearTimeout(timeout)
+          unsubscribe()
+        }
+      })
     })
-
-    return () => {
-      clearTimeout(timeout)
-      unsubscribe()
-    }
   }, [])
 
   const signInWithGoogle = useCallback(async () => {
-    if (MOCK_MODE || !auth) return
+    if (MOCK_MODE) return
     setError(null)
     try {
+      const { signInWithPopup, GoogleAuthProvider } = await import("firebase/auth")
+      const { auth } = await import("@/lib/firebase")
+      if (!auth) return
       const provider = new GoogleAuthProvider()
       await signInWithPopup(auth, provider)
     } catch (e: any) {
@@ -84,9 +68,12 @@ export function useAuth(): AuthState & AuthActions {
   }, [])
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
-    if (MOCK_MODE || !auth) return
+    if (MOCK_MODE) return
     setError(null)
     try {
+      const { signInWithEmailAndPassword } = await import("firebase/auth")
+      const { auth } = await import("@/lib/firebase")
+      if (!auth) return
       await signInWithEmailAndPassword(auth, email, password)
     } catch (e: any) {
       setError(e.message || "Erro ao fazer login")
@@ -94,9 +81,12 @@ export function useAuth(): AuthState & AuthActions {
   }, [])
 
   const signUpWithEmail = useCallback(async (email: string, password: string) => {
-    if (MOCK_MODE || !auth) return
+    if (MOCK_MODE) return
     setError(null)
     try {
+      const { createUserWithEmailAndPassword } = await import("firebase/auth")
+      const { auth } = await import("@/lib/firebase")
+      if (!auth) return
       await createUserWithEmailAndPassword(auth, email, password)
     } catch (e: any) {
       setError(e.message || "Erro ao criar conta")
@@ -104,10 +94,13 @@ export function useAuth(): AuthState & AuthActions {
   }, [])
 
   const signOut = useCallback(async () => {
-    if (MOCK_MODE || !auth) return
+    if (MOCK_MODE) return
     setError(null)
     try {
-      await firebaseSignOut(auth)
+      const { signOut: fbSignOut } = await import("firebase/auth")
+      const { auth } = await import("@/lib/firebase")
+      if (!auth) return
+      await fbSignOut(auth)
     } catch (e: any) {
       setError(e.message || "Erro ao sair")
     }
