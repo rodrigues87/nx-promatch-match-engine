@@ -1,24 +1,39 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function LoginPage() {
   const router = useRouter()
+  const { signInWithGoogle, signInWithEmail, error, isMock } = useAuth()
 
-  const handleGoogleLogin = () => {
-    // Mock: redireciona direto para onboarding/dashboard
-    router.push("/onboarding")
+  const handleGoogleLogin = async () => {
+    if (isMock) {
+      router.push("/onboarding")
+      return
+    }
+    await signInWithGoogle()
+    router.push("/dashboard")
   }
 
-  const handleEmailLogin = (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    router.push("/dashboard")
+    if (isMock) {
+      router.push("/dashboard")
+      return
+    }
+    const form = e.target as HTMLFormElement
+    const email = (form.elements.namedItem("email") as HTMLInputElement).value
+    const password = (form.elements.namedItem("password") as HTMLInputElement).value
+    await signInWithEmail(email, password)
+    if (!error) {
+      router.push("/dashboard")
+    }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
       <div className="w-full max-w-md">
-        {/* Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
           {/* Header */}
           <div className="text-center mb-8">
@@ -26,7 +41,19 @@ export default function LoginPage() {
             <p className="text-gray-500">
               Encontre vagas que combinam com você
             </p>
+            {isMock && (
+              <p className="text-xs text-yellow-600 mt-2 bg-yellow-50 rounded-lg px-3 py-1 inline-block">
+                Modo demo (sem Firebase)
+              </p>
+            )}
           </div>
+
+          {/* Erro */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
           {/* Google login */}
           <button
@@ -72,6 +99,7 @@ export default function LoginPage() {
               </label>
               <input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="seu@email.com"
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
@@ -83,6 +111,7 @@ export default function LoginPage() {
               </label>
               <input
                 id="password"
+                name="password"
                 type="password"
                 placeholder="••••••••"
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
@@ -96,7 +125,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Footer */}
           <p className="text-center text-xs text-gray-400 mt-6">
             Ao entrar, você concorda com nossos Termos de Uso
           </p>

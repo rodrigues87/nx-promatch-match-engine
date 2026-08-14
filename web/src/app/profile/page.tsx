@@ -1,28 +1,82 @@
 "use client"
 
-import { useState } from "react"
-import { mockUser } from "@/mocks/users"
+import { useState, useEffect } from "react"
+import { useProfile } from "@/hooks/useProfile"
 
 export default function ProfilePage() {
-  const [user, setUser] = useState(mockUser)
+  const { profile, loading, updateProfile, updateSkills, uploadResume } = useProfile()
+
+  const [name, setName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [location, setLocation] = useState("")
+  const [salaryMin, setSalaryMin] = useState(0)
+  const [experienceYears, setExperienceYears] = useState(0)
+  const [workModels, setWorkModels] = useState<string[]>([])
+  const [skills, setSkills] = useState<string[]>([])
   const [newSkill, setNewSkill] = useState("")
   const [saved, setSaved] = useState(false)
 
+  // Populate form from profile
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name || "")
+      setPhone(profile.phone || "")
+      setLocation(profile.location || "")
+      setSalaryMin(profile.salaryMin || 0)
+      setExperienceYears(profile.experienceYears || 0)
+      setWorkModels(profile.workModels || [])
+      setSkills(profile.skills || [])
+    }
+  }, [profile])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    )
+  }
+
+  const toggleWorkModel = (model: string) => {
+    setWorkModels((prev) =>
+      prev.includes(model) ? prev.filter((m) => m !== model) : [...prev, model]
+    )
+  }
+
   const addSkill = (skill: string) => {
-    if (skill && !user.skills.includes(skill)) {
-      setUser({ ...user, skills: [...user.skills, skill] })
+    if (skill.trim() && !skills.includes(skill.trim())) {
+      setSkills([...skills, skill.trim()])
     }
     setNewSkill("")
   }
 
   const removeSkill = (skill: string) => {
-    setUser({ ...user, skills: user.skills.filter((s) => s !== skill) })
+    setSkills(skills.filter((s) => s !== skill))
   }
 
-  const handleSave = () => {
-    // Mock: simula salvamento
+  const handleSave = async () => {
+    await updateProfile({
+      name,
+      phone,
+      location,
+      salaryMin,
+      experienceYears,
+      workModels,
+      skills,
+    } as any)
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const extractedSkills = await uploadResume(file)
+      if (extractedSkills.length > 0) {
+        const merged = [...new Set([...skills, ...extractedSkills])]
+        setSkills(merged)
+      }
+    }
   }
 
   return (
@@ -38,8 +92,8 @@ export default function ProfilePage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
               <input
                 type="text"
-                value={user.name}
-                onChange={(e) => setUser({ ...user, name: e.target.value })}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
             </div>
@@ -47,7 +101,7 @@ export default function ProfilePage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
                 type="email"
-                value={user.email}
+                value={profile?.email || ""}
                 disabled
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500"
               />
@@ -56,8 +110,8 @@ export default function ProfilePage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
               <input
                 type="tel"
-                value={user.phone}
-                onChange={(e) => setUser({ ...user, phone: e.target.value })}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
             </div>
@@ -65,8 +119,8 @@ export default function ProfilePage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Localização</label>
               <input
                 type="text"
-                value={user.location}
-                onChange={(e) => setUser({ ...user, location: e.target.value })}
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
             </div>
@@ -83,8 +137,8 @@ export default function ProfilePage() {
               </label>
               <input
                 type="number"
-                value={user.salaryMin}
-                onChange={(e) => setUser({ ...user, salaryMin: Number(e.target.value) })}
+                value={salaryMin}
+                onChange={(e) => setSalaryMin(Number(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
             </div>
@@ -94,8 +148,8 @@ export default function ProfilePage() {
               </label>
               <input
                 type="number"
-                value={user.experienceYears}
-                onChange={(e) => setUser({ ...user, experienceYears: Number(e.target.value) })}
+                value={experienceYears}
+                onChange={(e) => setExperienceYears(Number(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
             </div>
@@ -107,14 +161,9 @@ export default function ProfilePage() {
               {["remoto", "hibrido", "presencial"].map((model) => (
                 <button
                   key={model}
-                  onClick={() => {
-                    const models = user.workModels.includes(model)
-                      ? user.workModels.filter((m) => m !== model)
-                      : [...user.workModels, model]
-                    setUser({ ...user, workModels: models })
-                  }}
+                  onClick={() => toggleWorkModel(model)}
                   className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
-                    user.workModels.includes(model)
+                    workModels.includes(model)
                       ? "bg-blue-50 border-blue-300 text-blue-700"
                       : "border-gray-200 text-gray-600 hover:border-gray-300"
                   }`}
@@ -131,7 +180,7 @@ export default function ProfilePage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Qualificações</h2>
 
           <div className="flex flex-wrap gap-2 min-h-[48px] mb-4">
-            {user.skills.map((skill) => (
+            {skills.map((skill) => (
               <button
                 key={skill}
                 onClick={() => removeSkill(skill)}
@@ -140,6 +189,9 @@ export default function ProfilePage() {
                 {skill} <span className="text-[10px]">✕</span>
               </button>
             ))}
+            {skills.length === 0 && (
+              <span className="text-sm text-gray-400">Nenhuma qualificação adicionada</span>
+            )}
           </div>
 
           <div className="flex gap-2">
@@ -167,13 +219,15 @@ export default function ProfilePage() {
             <div className="flex items-center gap-3">
               <span className="text-2xl">📄</span>
               <div>
-                <p className="text-sm font-medium text-gray-900">resume.pdf</p>
-                <p className="text-xs text-gray-500">Enviado em 15/07/2026</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {profile?.resumePath ? "CV enviado" : "Nenhum CV enviado"}
+                </p>
+                <p className="text-xs text-gray-500">PDF ou DOCX (máx. 10MB)</p>
               </div>
             </div>
             <label className="text-sm text-blue-600 hover:text-blue-700 font-medium cursor-pointer">
-              Reenviar
-              <input type="file" accept=".pdf,.docx" className="hidden" />
+              {profile?.resumePath ? "Reenviar" : "Enviar"}
+              <input type="file" accept=".pdf,.docx" onChange={handleFileUpload} className="hidden" />
             </label>
           </div>
         </section>

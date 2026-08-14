@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users: somente o próprio usuário lê/escreve
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Matches: somente leitura pelo próprio usuário (escrita via Cloud Functions)
+    match /matches/{matchId} {
+      allow read: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Jobs: leitura por qualquer usuário autenticado (escrita via Cloud Functions)
+    match /jobs/{jobId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Queue: usuário cria e lê os próprios, atualização somente via Functions
+    match /queue/{queueId} {
+      allow read: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+  }
+}

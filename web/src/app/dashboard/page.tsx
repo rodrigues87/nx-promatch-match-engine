@@ -1,17 +1,24 @@
-/**
- * Dashboard — Tela principal com ranking de vagas compatíveis.
- * Usa dados mockados para prototipação de UX.
- */
+"use client"
 
-import { mockMatches } from "@/mocks/matches"
-import { mockUser } from "@/mocks/users"
+import { useMatches } from "@/hooks/useMatches"
+import { useProfile } from "@/hooks/useProfile"
 import { MatchCard } from "@/components/MatchCard"
 import { SkillTag } from "@/components/SkillTag"
 import Link from "next/link"
 
 export default function DashboardPage() {
-  const user = mockUser
-  const matches = mockMatches
+  const { profile, loading: profileLoading } = useProfile()
+  const { matches, loading: matchesLoading } = useMatches()
+
+  const loading = profileLoading || matchesLoading
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    )
+  }
 
   const avgScore = matches.length > 0
     ? Math.round((matches.reduce((sum, m) => sum + m.score, 0) / matches.length) * 100)
@@ -31,9 +38,14 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="flex flex-wrap gap-2">
-            {user.skills.map((skill) => (
+            {(profile?.skills || []).map((skill) => (
               <SkillTag key={skill} name={skill} variant="user" />
             ))}
+            {(!profile?.skills || profile.skills.length === 0) && (
+              <Link href="/onboarding" className="text-sm text-blue-600 hover:underline">
+                Adicionar qualificações
+              </Link>
+            )}
           </div>
         </section>
 
@@ -62,11 +74,18 @@ export default function DashboardPage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Vagas para você
           </h2>
-          <div className="space-y-4">
-            {matches.map((match) => (
-              <MatchCard key={match.id} match={match} />
-            ))}
-          </div>
+          {matches.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+              <p className="text-gray-500">Nenhuma vaga compatível encontrada ainda.</p>
+              <p className="text-sm text-gray-400 mt-1">Adicione suas skills para ver matches.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {matches.map((match) => (
+                <MatchCard key={match.id} match={match} />
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </div>
