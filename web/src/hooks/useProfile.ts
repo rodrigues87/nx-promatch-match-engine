@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import { MOCK_MODE } from "@/lib/firebase"
+import { useState, useEffect, useCallback } from "react"
 import { mockUser, MockUser } from "@/mocks/users"
 
 export interface UseProfileReturn {
@@ -14,9 +13,15 @@ export interface UseProfileReturn {
 }
 
 export function useProfile(): UseProfileReturn {
-  const [profile, setProfile] = useState<MockUser | null>(mockUser)
-  const [loading] = useState(false)
+  const [profile, setProfile] = useState<MockUser | null>(null)
+  const [loading, setLoading] = useState(true)
   const [error] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Mock mode: carrega dados simulados
+    setProfile(mockUser)
+    setLoading(false)
+  }, [])
 
   const updateProfile = useCallback(async (data: Partial<MockUser>) => {
     setProfile((prev) => (prev ? { ...prev, ...data } : null))
@@ -26,8 +31,7 @@ export function useProfile(): UseProfileReturn {
     setProfile((prev) => (prev ? { ...prev, skills } : null))
   }, [])
 
-  const uploadResume = useCallback(async (file: File): Promise<string[]> => {
-    // Mock: simula parsing
+  const uploadResume = useCallback(async (): Promise<string[]> => {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(["Java", "Spring Boot", "SQL", "Docker", "Git", "Angular", "TypeScript"])
