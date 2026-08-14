@@ -19,25 +19,18 @@ export interface UseMatchesReturn {
   error: string | null
 }
 
-/**
- * Hook para obter matches do usuário — Firestore realtime ou mock.
- */
 export function useMatches(maxResults: number = 50): UseMatchesReturn {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [matches, setMatches] = useState<MockMatch[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (MOCK_MODE) {
-      // Mock: retorna matches simulados
-      setMatches(mockMatches)
-      setLoading(false)
-      return
-    }
+    // Espera auth resolver primeiro
+    if (authLoading) return
 
-    if (!user || !db) {
-      // Não logado: usa mock para preview
+    if (MOCK_MODE || !user || !db) {
+      // Mock ou não logado: mostra dados mock para preview
       setMatches(mockMatches)
       setLoading(false)
       return
@@ -45,7 +38,7 @@ export function useMatches(maxResults: number = 50): UseMatchesReturn {
 
     // Firestore realtime listener
     const q = query(
-      collection(db, "matches"),
+      collection(db!, "matches"),
       where("userId", "==", user.uid),
       where("score", ">=", 0.4),
       orderBy("score", "desc"),
@@ -69,7 +62,7 @@ export function useMatches(maxResults: number = 50): UseMatchesReturn {
     )
 
     return () => unsubscribe()
-  }, [user, maxResults])
+  }, [user, authLoading, maxResults])
 
   return { matches, loading, error }
 }

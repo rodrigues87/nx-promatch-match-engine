@@ -33,31 +33,25 @@ interface RequestApplicationData {
   jobUrl: string
 }
 
-/**
- * Hook para candidaturas — Firestore realtime ou mock.
- */
 export function useApplications(): UseApplicationsReturn {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [applications, setApplications] = useState<MockApplication[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (MOCK_MODE) {
-      setApplications(mockApplications)
-      setLoading(false)
-      return
-    }
+    // Espera auth resolver primeiro
+    if (authLoading) return
 
-    if (!user || !db) {
-      // Não logado: usa mock para preview
+    if (MOCK_MODE || !user || !db) {
+      // Mock ou não logado: mostra dados mock para preview
       setApplications(mockApplications)
       setLoading(false)
       return
     }
 
     const q = query(
-      collection(db, "queue"),
+      collection(db!, "queue"),
       where("userId", "==", user.uid),
       orderBy("createdAt", "desc"),
     )
@@ -79,12 +73,11 @@ export function useApplications(): UseApplicationsReturn {
     )
 
     return () => unsubscribe()
-  }, [user])
+  }, [user, authLoading])
 
   const requestApplication = useCallback(
     async (data: RequestApplicationData) => {
-      if (MOCK_MODE) {
-        // Mock: simula adição na lista
+      if (MOCK_MODE || !user || !db) {
         const newApp: MockApplication = {
           id: `app_mock_${Date.now()}`,
           userId: user?.uid || "mock",
@@ -107,9 +100,7 @@ export function useApplications(): UseApplicationsReturn {
         return
       }
 
-      if (!user || !db) return
-
-      await addDoc(collection(db, "queue"), {
+      await addDoc(collection(db!, "queue"), {
         userId: user.uid,
         jobId: data.jobId,
         jobTitle: data.jobTitle,
@@ -132,18 +123,17 @@ export function useApplications(): UseApplicationsReturn {
 
   const cancelApplication = useCallback(
     async (applicationId: string) => {
-      if (MOCK_MODE) {
+      if (MOCK_MODE || !user || !db) {
         setApplications((prev) =>
           prev.map((a) => (a.id === applicationId ? { ...a, status: "cancelled" as const } : a)),
         )
         return
       }
 
-      if (!db) return
-      const docRef = doc(db, "queue", applicationId)
+      const docRef = doc(db!, "queue", applicationId)
       await updateDoc(docRef, { status: "cancelled" })
     },
-    [],
+    [user],
   )
 
   return { applications, loading, error, requestApplication, cancelApplication }

@@ -22,24 +22,18 @@ export interface UseProfileReturn {
   uploadResume: (file: File) => Promise<string[]>
 }
 
-/**
- * Hook para perfil do usuário — Firestore ou mock.
- */
 export function useProfile(): UseProfileReturn {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [profile, setProfile] = useState<MockUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (MOCK_MODE) {
-      setProfile(mockUser)
-      setLoading(false)
-      return
-    }
+    // Espera auth resolver primeiro
+    if (authLoading) return
 
-    if (!user || !db) {
-      // Não logado: usa mock para preview (não bloqueia UX)
+    if (MOCK_MODE || !user || !db) {
+      // Mock ou não logado: usa dados mock para preview
       setProfile(mockUser)
       setLoading(false)
       return
@@ -53,7 +47,6 @@ export function useProfile(): UseProfileReturn {
         if (docSnap.exists()) {
           setProfile({ id: docSnap.id, ...docSnap.data() } as unknown as MockUser)
         } else {
-          // Primeiro acesso: perfil ainda não existe
           setProfile(null)
         }
       } catch (e: any) {
@@ -64,16 +57,14 @@ export function useProfile(): UseProfileReturn {
     }
 
     fetchProfile()
-  }, [user])
+  }, [user, authLoading])
 
   const updateProfile = useCallback(
     async (data: Partial<MockUser>) => {
-      if (MOCK_MODE) {
+      if (MOCK_MODE || !user || !db) {
         setProfile((prev) => (prev ? { ...prev, ...data } : null))
         return
       }
-
-      if (!user || !db) return
 
       const docRef = doc(db!, "users", user.uid)
       const docSnap = await getDoc(docRef)
@@ -104,8 +95,7 @@ export function useProfile(): UseProfileReturn {
 
   const uploadResume = useCallback(
     async (file: File): Promise<string[]> => {
-      if (MOCK_MODE) {
-        // Mock: simula parsing de CV e retorna skills fictícias
+      if (MOCK_MODE || !user || !storage || !db) {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve(["Java", "Spring Boot", "SQL", "Docker", "Git", "Angular", "TypeScript"])
@@ -113,18 +103,10 @@ export function useProfile(): UseProfileReturn {
         })
       }
 
-      if (!user || !storage || !db) return []
-
-      // Upload do arquivo
       const fileRef = ref(storage!, `cvs/${user.uid}/${file.name}`)
       await uploadBytes(fileRef, file)
       const downloadUrl = await getDownloadURL(fileRef)
-
-      // Atualiza path no perfil
       await updateProfile({ resumePath: downloadUrl } as any)
-
-      // TODO: chamar Cloud Function para parsing real do CV
-      // Por enquanto retorna array vazio (user adicionará skills manualmente)
       return []
     },
     [user, updateProfile],
