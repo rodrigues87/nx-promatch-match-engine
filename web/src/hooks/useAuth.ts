@@ -32,7 +32,7 @@ export interface AuthActions {
  */
 export function useAuth(): AuthState & AuthActions {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!MOCK_MODE)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -47,51 +47,67 @@ export function useAuth(): AuthState & AuthActions {
       return
     }
 
+    if (!auth) {
+      // Firebase não inicializado
+      setLoading(false)
+      return
+    }
+
+    // Timeout de segurança: se onAuthStateChanged não responder em 3s,
+    // assume sem user e para de carregar
+    const timeout = setTimeout(() => {
+      setLoading(false)
+    }, 3000)
+
     // Firebase: escuta mudanças no estado de autenticação
-    const unsubscribe = onAuthStateChanged(auth!, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      clearTimeout(timeout)
       setUser(firebaseUser)
       setLoading(false)
     })
 
-    return () => unsubscribe()
+    return () => {
+      clearTimeout(timeout)
+      unsubscribe()
+    }
   }, [])
 
   const signInWithGoogle = useCallback(async () => {
-    if (MOCK_MODE) return
+    if (MOCK_MODE || !auth) return
     setError(null)
     try {
       const provider = new GoogleAuthProvider()
-      await signInWithPopup(auth!, provider)
+      await signInWithPopup(auth, provider)
     } catch (e: any) {
       setError(e.message || "Erro ao fazer login com Google")
     }
   }, [])
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
-    if (MOCK_MODE) return
+    if (MOCK_MODE || !auth) return
     setError(null)
     try {
-      await signInWithEmailAndPassword(auth!, email, password)
+      await signInWithEmailAndPassword(auth, email, password)
     } catch (e: any) {
       setError(e.message || "Erro ao fazer login")
     }
   }, [])
 
   const signUpWithEmail = useCallback(async (email: string, password: string) => {
-    if (MOCK_MODE) return
+    if (MOCK_MODE || !auth) return
     setError(null)
     try {
-      await createUserWithEmailAndPassword(auth!, email, password)
+      await createUserWithEmailAndPassword(auth, email, password)
     } catch (e: any) {
       setError(e.message || "Erro ao criar conta")
     }
   }, [])
 
   const signOut = useCallback(async () => {
-    if (MOCK_MODE) return
+    if (MOCK_MODE || !auth) return
     setError(null)
     try {
-      await firebaseSignOut(auth!)
+      await firebaseSignOut(auth)
     } catch (e: any) {
       setError(e.message || "Erro ao sair")
     }
